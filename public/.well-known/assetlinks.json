@@ -1,0 +1,11 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.dumke.diy",
+      "sha256_cert_fingerprints":
+        ["44:10:CE:33:B8:13:85:3D:E4:90:A8:1E:2C:56:6B:DB:F8:9E:FE:32:69:B1:E8:55:45:C6:C9:13:E5:58:63:3A"]
+    }
+  }
+]
