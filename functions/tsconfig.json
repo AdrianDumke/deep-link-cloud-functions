@@ -1,17 +1,18 @@
 {
   "compilerOptions": {
     "module": "NodeNext",
-    "esModuleInterop": true,
     "moduleResolution": "nodenext",
+    "target": "ES2021",
+    "lib": ["ES2021"],
+
+    "esModuleInterop": true,
+    "strict": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
+
     "outDir": "lib",
-    "sourceMap": true,
-    "strict": true,
-    "target": "es2017"
+    "sourceMap": true
   },
   "compileOnSave": true,
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

@@ -1,5 +1,7 @@
 import { onRequest } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
+import { getStorage, getDownloadURL } from "firebase-admin/storage";
+
 import * as admin from 'firebase-admin';
 
 import { readFileSync } from 'fs';
@@ -36,13 +38,13 @@ app.use(
 app.get("*", async (req, res, next) => {
 
   try {
-    // Get Firestore instance
-    const collection = getFirestore().collection("_deep_link_settings_");
-    // Parse link data
+
     const urlObject = new URL(req.url, "https://deeplink");
     const linkPath = urlObject.pathname;
+
     // Fetch link document
-    const snapshotQuery = collection.where("path", "==", linkPath).limit(1);
+    const deepLinkCollection = getFirestore().collection("_deep_link_settings_");
+    const snapshotQuery = deepLinkCollection.where("path", "==", linkPath).limit(1);
     const linkSnapshot = await snapshotQuery.get();
     const linkFound = linkSnapshot.docs.length !== 0;
     // If not found, return 404
@@ -51,10 +53,44 @@ app.get("*", async (req, res, next) => {
     }
 
     const deepLinkConfig = linkSnapshot.docs[0].data() as DeepLinkConfig;
-    const source = await getDeepLinkResponse(deepLinkConfig);
-    res.setHeader("Cache-Control", "no-cache");
 
-    return res.status(200).send(source);
+    const manualId = urlObject.searchParams.get("manualId");
+
+    if(manualId) {
+
+      const manualsRef = getFirestore().collection("manuals").doc(manualId);
+      const manual = await manualsRef.get();
+
+      if(manual.exists) {
+
+        const values = manual.data()?.values
+
+        const title = values?.AT_TITLE?.value?.value || deepLinkConfig["og:title"];
+        const description = values.AT_DESCRIPTION?.value?.value || deepLinkConfig["og:description"];
+
+        const smallImageRef = toResizedImageRef("800x800", values?.AT_IMAGE_REF?.value?.value) || "";
+        const fileRef = getStorage().bucket().file(smallImageRef); 
+
+        try {
+
+          const imageUrl = await getDownloadURL(fileRef);
+          deepLinkConfig["og:image"] = imageUrl;
+
+        } catch(error) {
+          console.error("No image found");
+        }
+
+        deepLinkConfig["og:title"] = title;
+        deepLinkConfig["og:description"] = description;
+        
+        const source = await getDeepLinkResponse(deepLinkConfig);
+
+        res.setHeader("Cache-Control", "no-cache");
+        return res.status(200).send(source);
+      }
+    }
+
+    return res.status(404).send(getNotFoundResponse());
 
   } catch (error) {
     console.error("Error processing deep link: ", error);
@@ -72,10 +108,10 @@ function getNotFoundResponse(): string {
 
   const templatePath = join(__dirname, './html/404.html');
   const source = readFileSync(templatePath, { encoding: "utf-8" })
-    .replace('{{thumbnail}}', thumbnail)
-    .replace('{{notFoundImage}}', notFoundImage)
-    .replace('{{backgroundImage}}', backgroundImage)
-    .replace('{{poweredImage}}', poweredImage);
+    .replaceAll('{{thumbnail}}', thumbnail)
+    .replaceAll('{{notFoundImage}}', notFoundImage)
+    .replaceAll('{{backgroundImage}}', backgroundImage)
+    .replaceAll('{{poweredImage}}', poweredImage);
 
   return source;
 }
@@ -101,16 +137,33 @@ async function getDeepLinkResponse(deepLinkConfig: DeepLinkConfig): Promise<stri
 
   const templatePath = join(__dirname, "./html/index.html");
   const source = readFileSync(templatePath, { encoding: 'utf-8' })
-    .replace("{{title}}", title)
-    .replace("{{description}}", description)
-    .replace("{{androidBundleID}}", androidBundleID)
-    .replace("{{androidScheme}}", (androidScheme ?? false).toString())
-    .replace("{{redirectToStore}}", redirectToStore.toString())
-    .replace("{{redirectUrl}}", redirectUrl)
-    .replace("{{thumbnail}}", image)
-    .replace("{{statusImage}}", statusImage)
-    .replace("{{backgroundImage}}", backgroundImage)
-    .replace("{{poweredImage}}", poweredImage);
+    .replaceAll("{{title}}", title)
+    .replaceAll("{{description}}", description)
+    .replaceAll("{{androidBundleID}}", androidBundleID)
+    .replaceAll("{{androidScheme}}", (androidScheme ?? false).toString())
+    .replaceAll("{{redirectToStore}}", redirectToStore.toString())
+    .replaceAll("{{redirectUrl}}", redirectUrl)
+    .replaceAll("{{thumbnail}}", image)
+    .replaceAll("{{statusImage}}", statusImage)
+    .replaceAll("{{backgroundImage}}", backgroundImage)
+    .replaceAll("{{poweredImage}}", poweredImage);
 
   return source;
+}
+
+const toResizedImageRef = (size: string, ref?: string) => {
+
+  if(ref) {
+      const dotIndex = ref.lastIndexOf('.');
+      if (dotIndex === -1) {
+          return undefined;
+      }
+  
+      const nameWithoutExtension = ref.substring(0, dotIndex);
+      const extension = ref.substring(dotIndex);
+  
+      return`${nameWithoutExtension}_${size}${extension}`;
+  }
+
+  return ref;
 }
