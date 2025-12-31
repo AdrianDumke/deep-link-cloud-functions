@@ -27,29 +27,74 @@
     <link rel="apple-touch-icon" href="" />
 
     <style>
+
+      html,
       body {
         padding: 0;
         margin: 0;
-        background-color: black;
+        background-color: rgb(18, 18, 18);
         background-size: cover;
-        background-image: url('{{backgroundImage}}');
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Ubuntu, sans-serif;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
       }
 
-      #fl-powered {
-        position: absolute;
-        position: absolute;
-        bottom: 0px;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 120px;
+      /* ===== CARD ===== */
+
+      .card {
+        background: rgb(37, 37, 37);
+        border-radius: 12px;
+        overflow: hidden;
+        width: 100%;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+        text-decoration: none;
+        color: inherit;
+      }
+      
+      .cover {
+        height: 260px;
+        background: rgb(37, 37, 37);
       }
 
-      #status {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 200px;
+      #thumbnail {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* ← zeigt immer das ganze Bild */
+        display: block;
+      }
+      .content {
+        padding: 18px 20px 22px;
+        background: rgb(37, 37, 37);
+      }
+
+      .title {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: rgb(233, 233, 233);
+        margin-bottom: 6px;
+        display: -webkit-box;        /* Flexibles Box-Modell für Textbegrenzung */
+        -webkit-line-clamp: 1;       /* Anzahl der Zeilen */
+        -webkit-box-orient: vertical;/* vertikale Ausrichtung */
+        overflow: hidden;            /* Alles, was drüber geht, ausblenden */
+        text-overflow: ellipsis;     /* … am Ende */
+      }
+
+      .description {
+        font-size: 0.9rem;
+        line-height: 1.45;
+        color: rgb(208, 208, 208);
+        display: -webkit-box;        /* Flexibles Box-Modell für Textbegrenzung */
+        -webkit-line-clamp: 2;       /* Anzahl der Zeilen */
+        -webkit-box-orient: vertical;/* vertikale Ausrichtung */
+        overflow: hidden;            /* Alles, was drüber geht, ausblenden */
+        text-overflow: ellipsis;     /* … am Ende */
+      }
+
+      a {
+        text-decoration: none;
+        color: inherit;
       }
     </style>
   </head>
@@ -62,10 +107,18 @@
   ></script>
 
   <body>
-    <img id="status" src="{{statusImage}}" />
-    <a href="https://github.com/AdrianDumke/deep-link-cloud-functions">
-      <img id="fl-powered" src="{{poweredImage}}" />
-    </a>
+      <div class="card">
+        <div class="cover">
+          <img id="thumbnail" src="{{thumbnail}}" alt="{{title}}" />
+        </div>
+
+        <div class="content">
+          <div class="title">{{title}}</div>
+          <div class="description">
+            {{description}}
+          </div>
+        </div>
+      </div>
   </body>
 
   <script>

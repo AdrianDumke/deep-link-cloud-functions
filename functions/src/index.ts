@@ -85,7 +85,7 @@ app.get("*", async (req, res, next) => {
         
         const source = await getDeepLinkResponse(deepLinkConfig);
 
-        res.setHeader("Cache-Control", "no-cache");
+        res.setHeader("Cache-Control", "public, max-age=3600");
         return res.status(200).send(source);
       }
     }
