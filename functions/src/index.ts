@@ -68,8 +68,8 @@ app.get("*", async (req, res, next) => {
         const title = values?.AT_TITLE?.value?.value || deepLinkConfig["og:title"];
         const description = values.AT_DESCRIPTION?.value?.value || deepLinkConfig["og:description"];
 
-        const smallImageRef = toResizedImageRef("800x800", values?.AT_IMAGE_REF?.value?.value) || "";
-        const fileRef = getStorage().bucket().file(smallImageRef); 
+        const bigImageRef = toResizedImageRef("800x800", values?.AT_IMAGES_REFS?.values[0]?.value) || "";
+        const fileRef = getStorage().bucket().file(bigImageRef); 
 
         try {
 
